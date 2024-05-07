@@ -1,1 +1,4 @@
 rootProject.name = 'ticket-practice'
+include 'ticket-coupon'
+include 'ticket-order'
+include 'ticket-pay'
