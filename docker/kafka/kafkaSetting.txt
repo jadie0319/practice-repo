@@ -1,0 +1,13 @@
+docker-compose -f ./docker-compose-kafka.yml up -d
+
+docker-compose down
+
+
+confluentinc 이미지를 사용하면 아래와 같이 .sh 를 빼고 명령어를 실행해주면 된다.
+
+
+명령어
+docker exec -it kafka-kafka-1 kafka-topics --bootstrap-server localhost:29092 --create --topic coupon_create
+docker exec -it kafka-kafka-1 kafka-console-producer --topic coupon_create --broker-list localhost:29092
+docker exec -it kafka-kafka-1 kafka-console-consumer --topic coupon_create --bootstrap-server localhost:29092
+docker exec -it kafka-kafka-1 kafka-console-consumer --topic coupon_create --bootstrap-server localhost:29092 --key-deserializer "org.apache.kafka.common.serialization.StringDeserializer" --value-deserializer "org.apache.kafka.common.serialization.LongDeserializer"

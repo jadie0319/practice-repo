@@ -1,2 +1,9 @@
 docker pull redis
-docker run --name myredis -d -p 6379:6379 redis
+docker run --name myredis -d -p 6380:6380 redis
+
+docker-compose -f ./docker-compose-redis.yml up -d
+
+명령어
+
+redis-cli -p 6380
+get coupon_count
