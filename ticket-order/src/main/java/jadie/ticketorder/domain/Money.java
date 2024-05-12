@@ -9,4 +9,8 @@ public class Money {
     public Money add(Money money) {
         return new Money(this.value + money.value);
     }
+
+    public int getValue() {
+        return value;
+    }
 }

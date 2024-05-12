@@ -10,15 +10,22 @@ import static jadie.ticketorder.exception.OrderExceptionMessages.NOT_CHANGE_SHIP
 public class Order {
     private OrderState state;
     private ShippingInfo shippingInfo;
-    private List<OrderLine> orderLines;
+
+    private OrderLines orderLines;
+    private int totalAmounts;
 
     public Order(List<OrderLine> orderLines) {
         setOrderLines(orderLines);
     }
 
+    public void changeOrderLines(List<OrderLine> newLines) {
+        orderLines.changeOrderLines(newLines);
+        this.totalAmounts = orderLines.getTotalAmount();
+    }
+
     private void setOrderLines(List<OrderLine> orderLines) {
         verifyAtLeastOneOrMoreOrderLines(orderLines);
-        this.orderLines = orderLines;
+        this.orderLines = new OrderLines(orderLines);
     }
 
     private void verifyAtLeastOneOrMoreOrderLines(List<OrderLine> orderLines) {
