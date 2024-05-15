@@ -15,8 +15,8 @@ public class Coupon {
     protected Coupon() {
     }
 
-    public Coupon(Long id) {
-        this.id = id;
+    public Coupon(Long userId) {
+        this.userId = userId;
     }
 
     public Long getId() {
