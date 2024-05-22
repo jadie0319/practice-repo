@@ -13,6 +13,7 @@ public class Article {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
+    private String writerName;
     @AttributeOverrides({
             @AttributeOverride(name = "content", column = @Column(table = "article_content", name = "content")),
             @AttributeOverride(name = "contentType", column = @Column(table = "article_content", name = "content_type"))

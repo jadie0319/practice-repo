@@ -8,6 +8,8 @@ import static jadie.ticketorder.exception.OrderExceptionMessages.EMPTY_ORDER_LIN
 import static jadie.ticketorder.exception.OrderExceptionMessages.NOT_CHANGE_SHIPPING_INFO;
 
 public class Order {
+    private Long id;
+    private String orderName;
     private OrderState state;
     private ShippingInfo shippingInfo;
 

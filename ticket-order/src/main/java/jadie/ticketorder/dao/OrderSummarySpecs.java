@@ -16,6 +16,13 @@ public class OrderSummarySpecs {
                 CriteriaBuilder cb) -> cb.equal(root.<String>get("orderId"), orderId);
     }
 
+    public static Specification<OrderSummary> ordererName(String ordererName) {
+        return (
+                Root<OrderSummary> root,
+                CriteriaQuery<?> query,
+                CriteriaBuilder cb) -> cb.equal(root.<String>get("ordererName"), ordererName);
+    }
+
     public static Specification<OrderSummary> orderDateBetween(LocalDateTime from, LocalDateTime to) {
         return (
                 Root<OrderSummary> root,
