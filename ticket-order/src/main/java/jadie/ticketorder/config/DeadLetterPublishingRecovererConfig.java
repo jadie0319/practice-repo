@@ -17,8 +17,8 @@ public class DeadLetterPublishingRecovererConfig {
     public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(KafkaTemplate<String, String> template) {
         return new DeadLetterPublishingRecoverer(template,
                 (consumerRecord, ex) -> {
-                    logger.error("=== save coupon-create-DLT, consumerRecord: {}", consumerRecord);
-                    return new TopicPartition("coupon-create-DLT", consumerRecord.partition());
+                    logger.error("=== save coupon_create_DLT, consumerRecord: {}", consumerRecord);
+                    return new TopicPartition("coupon_create_DLT", consumerRecord.partition());
                 });
     }
 
