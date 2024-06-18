@@ -23,6 +23,7 @@ public class ApplyService {
         this.appliedUserRepository = appliedUserRepository;
     }
 
+    // 인프런 강의 코드
     public void apply(Long userId) {
         //long count = couponRepository.count();
         //Long count = couponCountRepository.increment();
