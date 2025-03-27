@@ -1,13 +1,13 @@
-package jadie.ticketpay;
+package jadie.webfluxpractice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TicketPayApplication {
+public class WebfluxPracticeApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TicketPayApplication.class, args);
+		SpringApplication.run(WebfluxPracticeApplication.class, args);
 	}
 
 }

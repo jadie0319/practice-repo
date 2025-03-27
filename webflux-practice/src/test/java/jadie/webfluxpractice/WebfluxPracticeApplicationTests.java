@@ -1,10 +1,10 @@
-package jadie.ticketpay;
+package jadie.webfluxpractice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TicketPayApplicationTests {
+class WebfluxPracticeApplicationTests {
 
 	@Test
 	void contextLoads() {
