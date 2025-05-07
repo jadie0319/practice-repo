@@ -71,9 +71,10 @@ class PayApiClientTest {
         List<CompletableFuture<ResponseEntity<Void>>> futures = new ArrayList<>();
 
         // i가 짝수일땐 200 응답, i 가 홀수일땐 실패
-        for (int i = 0; i < 5; i++) {
+        for (int i = 1; i < 6; i++) {
             try {
                 ResponseEntity<Void> response = payApiClient.pay(i);
+                //System.out.println("response: " + response.getBody());
             } catch (RequestNotPermitted e) {
                 System.out.println("Request #" + i + " - RequestNotPermitted: " + e.getMessage());
             } catch (CallNotPermittedException e) {
