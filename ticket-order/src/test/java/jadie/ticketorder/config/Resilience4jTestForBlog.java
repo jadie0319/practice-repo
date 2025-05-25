@@ -1,10 +1,5 @@
 package jadie.ticketorder.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -27,40 +22,11 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class Resilience4jTest {
-
-//    private WireMockServer wireMock;
-//    @BeforeEach
-//    public void setUp() {
-//        wireMock = new WireMockServer(wireMockConfig().port(8080));
-//        wireMock.start();
-//        WireMock.configureFor("localhost", 8080);
-//    }
-//    @AfterEach
-//    void tearDown() {
-//        wireMock.stop();
-//    }
-
-
+public class Resilience4jTestForBlog {
 
     @DisplayName("Resilience4j 테스트")
     @Test
-    void testRateLimiter() throws InterruptedException {
-//        wireMock.stubFor(
-//                WireMock.post("/sigong/exam/file.do")
-//                        .withRequestBody(equalToJson("{\"key\":\"0\"}", true, true))
-//                        .willReturn(
-//                                aResponse().withStatus(200)
-//                        )
-//        );
-//        wireMock.stubFor(
-//                WireMock.post("/sigong/exam/file.do")
-//                        .withRequestBody(equalToJson("{\"key\":\"1\"}", true, true))
-//                        .willReturn(
-//                                aResponse().withStatus(500)
-//                        )
-//        );
-
+    void resilience4jTest() throws InterruptedException {
         CircuitBreaker circuitBreaker = getCircuitBreaker();
         addCircuitBreakerMonitoring(circuitBreaker);
 
@@ -70,35 +36,7 @@ public class Resilience4jTest {
         Retry retry = getRetry();
         addRetryMonitor(retry);
 
-        ObjectMapper mapper = (new ObjectMapper())
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(SerializationFeature.INDENT_OUTPUT, true)
-                .registerModules(new JavaTimeModule(), new Jdk8Module());
-
-//        PayApiClient examSvcApiClient = Feign.builder()
-//                .encoder(new JacksonEncoder(mapper))
-//                .decoder(new JacksonDecoder(mapper))
-//                .logger(new Slf4jLogger(PayApiClient.class))
-//                .retryer(Retryer.NEVER_RETRY)
-//                .logLevel(Logger.Level.FULL)
-//                //.errorDecoder(new MockFeignErrorDecoder())
-//                .target(PayApiClient.class, "http://localhost:8081");
-
-
         MockPayApiClient mockPayApiClient = new MockPayApiClient();
-
-//        Function<Integer, ResponseEntity<Void>> decoratedFunction = CircuitBreaker.decorateFunction(
-//                circuitBreaker,
-//                RateLimiter.decorateFunction(
-//                        rateLimiter,
-//                        Retry.decorateFunction(
-//                                retry,
-//                                (Integer event) -> mockPayApiClient.pay(event)
-//                        )
-//                )
-//        );
-
-        // retry 시도가 서킷브레이커에 누적됨
         Function<Integer, ResponseEntity<Void>> decoratedFunction = Retry.decorateFunction(
                 retry,
                 RateLimiter.decorateFunction(
@@ -129,34 +67,7 @@ public class Resilience4jTest {
             } catch (Exception e) {
                 System.out.println("Exception Request #" + i + " - Exception: " + e.getMessage());
             }
-            // 여기서 예외를 catch 안하면 예외 뱉고 테스트 종료되길래. 근데 catch 하면 재시도도 안할까봐 catch 안했는데 catch 해야 됐었다...
-            // feign 통해서 호출(wiremock 사용) 하는건 예외 발생해도 테스트 종료 안되는데, feign 안쓰면 catch 해줘야 테스트가 종료 안된다.
-//            catch (FailedCreateFileException e) {
-//                System.out.println("FailedCreateFileException Request #" + i + " - FailedCreateFileException: " + e.getMessage());
-//            }
-
-
-//            final int index = i;
-//            CompletableFuture<ResponseEntity<Void>> future = CompletableFuture.supplyAsync(() -> {
-//                try {
-//                    CreateExamFileRequest req = new CreateExamFileRequest(String.valueOf(index), EventType.EXAM_ID.name(), ChangeType.INSERT.name());
-//                    ResponseEntity<Void> response = decoratedFunction.apply(req);
-//                    return response;
-//                } catch (RequestNotPermitted e) {
-//                    System.out.println("RequestNotPermitted Request #" + index + " - RequestNotPermitted: " + e.getMessage());
-//                } catch (CallNotPermittedException e) {
-//                    System.out.println("CallNotPermittedException Request #" + index + " - CallNotPermittedException: " + e.getMessage());
-//                } catch (FeignException e) {
-//                    System.out.println("FeignException Request #" + index + " - FeignException Retry: " + e.getMessage());
-//                }
-//                return null;
-//            }, executor);
-//            futures.add(future);
-//
-//            // 각 요청 사이에 짧은 지연
-//            Thread.sleep(100);
         }
-
 
         // 1초 대기 후 다시 시도 (토큰이 리필되었는지 확인)
         Thread.sleep(10000);
@@ -200,7 +111,7 @@ public class Resilience4jTest {
                     System.out.println("CB - Call not permitted at " + event.getCreationTime());
                 })
                 .onError(event -> {
-                    System.out.println("CB - Call errorCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls() + " notPermittedCall:" + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+                    System.out.println("CB - Call successCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls() + " notPermittedCall:" + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
                     //System.out.println("CB - Call failed at " + event.getCreationTime() + " with exception: " + event.getThrowable().getClass().getName());
                 })
                 .onSuccess(event -> {

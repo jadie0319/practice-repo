@@ -11,7 +11,7 @@ public class MockPayApiClient implements PayApiClient {
 
     @Override
     public ResponseEntity<Void> pay(Integer key) {
-        if (key % 2 == 0) { // 짝수면 성공
+        if (key % 2 != 0) { // 홀수면 성공
             logger.info("Key : {}", String.valueOf(key));
             return ResponseEntity.created(URI.create("/pay")).build();
         } else {
