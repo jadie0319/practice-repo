@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +51,28 @@ public class Resilience4jTestForBlog {
                 )
         );
 
+//        int threadCount = 15;
+//        ExecutorService executorService = Executors.newFixedThreadPool(15);
+//        CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+//
+//        System.out.println("테스트 시작");
+//
+////        for (int i=1 ;i <= threadCount ; i++) {
+////            Integer id = i;
+////            executorService.submit(() -> {
+////                try {
+////                    ResponseEntity<Void> response = decoratedFunction.apply(id);
+////                } finally {
+////                    countDownLatch.countDown();
+////                }
+////            });
+////        }
+////        countDownLatch.await();
 
-        // 짝수면 성공
+
+
+
+        // 홀수면 성공
         for (int i = 1; i <= 10; i++) {
             System.out.println();
             System.out.println();
