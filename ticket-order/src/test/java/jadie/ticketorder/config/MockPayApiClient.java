@@ -13,15 +13,16 @@ public class MockPayApiClient implements PayApiClient {
     @Override
     public ResponseEntity<Void> pay(Integer key) {
         try {
-            TimeUnit.SECONDS.sleep(10L);
+            TimeUnit.SECONDS.sleep(1L);
+            //TimeUnit.MILLISECONDS.sleep(100L);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         if (key % 2 != 0) { // 홀수면 성공
-            //logger.info("Key : {}", String.valueOf(key));
+            logger.info("API Call Success Key : " + String.valueOf(key));
             return ResponseEntity.created(URI.create("/pay")).build();
         } else {
-            //logger.info("Key : {}", String.valueOf(key));
+            logger.info("API Call Failed Key : " + String.valueOf(key));
             throw new RuntimeException("Failed pay : " + key);
         }
     }

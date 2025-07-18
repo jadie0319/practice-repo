@@ -15,6 +15,8 @@ import io.github.resilience4j.retry.RetryRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Duration;
@@ -26,6 +28,8 @@ import java.util.function.Function;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class Resilience4jTestForBlog {
+    private Logger logger = LoggerFactory.getLogger(Resilience4jTestForBlog.class);
+
 
     @DisplayName("Resilience4j 테스트")
     @Test
@@ -40,12 +44,23 @@ public class Resilience4jTestForBlog {
         addRetryMonitor(retry);
 
         MockPayApiClient mockPayApiClient = new MockPayApiClient();
-        Function<Integer, ResponseEntity<Void>> decoratedFunction = Retry.decorateFunction(
-                retry,
+//        Function<Integer, ResponseEntity<Void>> decoratedFunction = Retry.decorateFunction(
+//                retry,
+//                RateLimiter.decorateFunction(
+//                        rateLimiter,
+//                        CircuitBreaker.decorateFunction(
+//                                circuitBreaker,
+//                                (Integer event) -> mockPayApiClient.pay(event)
+//                        )
+//                )
+//        );
+
+        Function<Integer, ResponseEntity<Void>> decoratedFunction = CircuitBreaker.decorateFunction(
+                circuitBreaker,
                 RateLimiter.decorateFunction(
                         rateLimiter,
-                        CircuitBreaker.decorateFunction(
-                                circuitBreaker,
+                        Retry.decorateFunction(
+                                retry,
                                 (Integer event) -> mockPayApiClient.pay(event)
                         )
                 )
@@ -69,11 +84,8 @@ public class Resilience4jTestForBlog {
 ////        }
 ////        countDownLatch.await();
 
-
-
-
         // 홀수면 성공
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 15; i++) {
             System.out.println();
             System.out.println();
 
@@ -113,35 +125,39 @@ public class Resilience4jTestForBlog {
 
     private void addRetryMonitor(Retry retry) {
         retry.getEventPublisher()
-                .onSuccess(e -> System.out.println("\nRETRY - Successfully added retry event: " + e))
-                .onError(e -> System.out.println("\nRETRY - Error: " + e));
+                .onSuccess(e -> logger.info("\nRETRY - Successfully added retry event: " + e))
+                .onError(e -> logger.info("\nRETRY - Error: " + e));
 //                .onRetry(e -> System.out.println("\nRETRY - Retry event: " + e));
     }
 
     private void addRateLimiterMonitor(RateLimiter rateLimiter) {
         rateLimiter.getEventPublisher()
                 .onSuccess(event -> {
-                    System.out.println("RL - success: "+ " AvailablePermissions: " + rateLimiter.getMetrics().getAvailablePermissions() + " NumberOfWaitingThreads: " + rateLimiter.getMetrics().getNumberOfWaitingThreads());
+                    logger.info("RL - success: "+ " AvailablePermissions: " + rateLimiter.getMetrics().getAvailablePermissions() + " NumberOfWaitingThreads: " + rateLimiter.getMetrics().getNumberOfWaitingThreads());
                 })
                 .onFailure(throwable -> {
-                    System.out.println("RL - failed: " + throwable + " AvailablePermissions: " + rateLimiter.getMetrics().getAvailablePermissions() + " NumberOfWaitingThreads: " + rateLimiter.getMetrics().getNumberOfWaitingThreads());
-                });
+                    logger.info("RL - failed: " + throwable + " AvailablePermissions: " + rateLimiter.getMetrics().getAvailablePermissions() + " NumberOfWaitingThreads: " + rateLimiter.getMetrics().getNumberOfWaitingThreads());
+                })
+//                .onEvent(event -> {
+//                    logger.info("RL - event : " + event);
+//                })
+        ;
     }
 
     private void addCircuitBreakerMonitoring(CircuitBreaker circuitBreaker) {
         circuitBreaker.getEventPublisher()
                 .onCallNotPermitted(event -> {
-                    System.out.println("CB - Call not permitted at " + event.getCreationTime());
+                    logger.info("CB - Call not permitted. failRate: " + circuitBreaker.getMetrics().getFailureRate() +  " notPermittedCall: " + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls() + " successCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls());
                 })
                 .onError(event -> {
-                    System.out.println("CB - Call successCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls() + " notPermittedCall:" + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+                    logger.info("CB - Call successCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls() + " notPermittedCall:" + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
                     //System.out.println("CB - Call failed at " + event.getCreationTime() + " with exception: " + event.getThrowable().getClass().getName());
                 })
                 .onSuccess(event -> {
-                    System.out.println("CB - Call successCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls() + " notPermittedCall:" + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+                    logger.info("CB - Call successCall: " + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls() + " failedCall: " + circuitBreaker.getMetrics().getNumberOfFailedCalls() + " notPermittedCall:" + circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
                 })
                 .onStateTransition(event -> {
-                    System.out.println("CB - CircuitBreaker state changed from " +
+                    logger.info("CB - CircuitBreaker state changed from " +
                             event.getStateTransition().getFromState() +
                             " to " + event.getStateTransition().getToState() +
                             " at " + event.getCreationTime());
@@ -156,7 +172,7 @@ public class Resilience4jTestForBlog {
                                 .failureRateThreshold(50) // 실패율 임계값
                                 .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
                                 .slidingWindowSize(20)
-                                .slidingWindowSynchronizationStrategy(CircuitBreakerConfig.SlidingWindowSynchronizationStrategy.LOCK_FREE)
+                                //.slidingWindowSynchronizationStrategy(CircuitBreakerConfig.SlidingWindowSynchronizationStrategy.LOCK_FREE)
                                 .minimumNumberOfCalls(10)
                                 .permittedNumberOfCallsInHalfOpenState(5) // 반열림 상태에서 호출 허용 개수
                                 .waitDurationInOpenState(Duration.ofSeconds(10L)) // 열린 상태에서 10초 대기
@@ -191,8 +207,8 @@ public class Resilience4jTestForBlog {
     @NotNull
     private RateLimiter getRateLimiter() {
         RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofMillis(500))
-                .limitForPeriod(10) // 초당 10개 요청으로 제한, 초당 10개 요청으로 제한된 경우 버킷에는 10개의 토큰이 있고 매초 리필됩니다.(토큰 버킷 알고리즘, 버킷이 비면 새 토큰이 생길 때까지 스레드가 대기합니다.)
+                .limitRefreshPeriod(Duration.ofMillis(5000))
+                .limitForPeriod(2) // 초당 10개 요청으로 제한, 초당 10개 요청으로 제한된 경우 버킷에는 10개의 토큰이 있고 매초 리필됩니다.(토큰 버킷 알고리즘, 버킷이 비면 새 토큰이 생길 때까지 스레드가 대기합니다.)
                 .timeoutDuration(Duration.ofSeconds(1L)) //  허가를 기다리는 스레드의 대기시간. 허가를 얻지 못하면 RequestNotPermitted 예외 발생
                 .build();
         return RateLimiterRegistry.of(rateLimiterConfig)
